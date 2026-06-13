@@ -1,91 +1,45 @@
-# Day 01 Backend Development Task
+# Day 02 Backend CRUD API
 
-Project Title:
-Simple Student REST API
+## Project Title
+Student Management REST API
 
-Description:
-This project is created for Day 01 Backend Development internship training task.
+## Domain
+Backend Development
 
-The project contains two REST APIs:
-1. GET API to retrieve student data
-2. POST API to add new student data
+## Objective
+The objective of this task is to create CRUD APIs using Node.js and Express.js, test them, and document the API endpoints.
 
-Technology Used:
-- Python
-- Flask
-- Browser
-- PowerShell
+## Technologies Used
+- Node.js
+- Express.js
+- PowerShell for API testing
 
-How to Run:
-1. Install Flask:
-pip install flask
+## Features
+- Create student
+- Read all students
+- Read single student by ID
+- Update student
+- Delete student
+- Error handling for student not found
+- Request validation for required fields
 
-2. Run the application:
-python app.py
+## API Endpoints
 
-3. Server URL:
-http://127.0.0.1:5000
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | / | Check server running |
+| POST | /api/students | Create new student |
+| GET | /api/students | Get all students |
+| GET | /api/students/:id | Get student by ID |
+| PUT | /api/students/:id | Update student |
+| DELETE | /api/students/:id | Delete student |
 
-API 1: GET Students
+## Sample Request Body
 
-Method:
-GET
-
-Endpoint:
-/students
-
-Full URL:
-http://127.0.0.1:5000/students
-
-Description:
-This API retrieves all student data.
-
-Sample Response:
+```json
 {
-  "data": [
-    {
-      "domain": "Backend Development",
-      "id": 1,
-      "name": "Dilan"
-    },
-    {
-      "domain": "Backend Development",
-      "id": 2,
-      "name": "Aman"
-    }
-  ],
-  "message": "Student data fetched successfully"
+  "name": "Rahul Sharma",
+  "email": "rahul@example.com",
+  "course": "Backend Development",
+  "age": 22
 }
-
-API 2: POST Student
-
-Method:
-POST
-
-Endpoint:
-/students
-
-Full URL:
-http://127.0.0.1:5000/students
-
-Description:
-This API adds a new student.
-
-Sample Request:
-{
-  "name": "Rahul",
-  "domain": "Backend Development"
-}
-
-Sample Response:
-{
-  "data": {
-    "domain": "Backend Development",
-    "id": 3,
-    "name": "Rahul"
-  },
-  "message": "Student added successfully"
-}
-
-Conclusion:
-In this task, I learned how to create and test basic REST APIs using Flask. I created a GET API to retrieve data and a POST API to submit new data. I tested the GET API using browser and POST API using PowerShell.
