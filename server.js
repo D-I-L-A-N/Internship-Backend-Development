@@ -1,113 +1,153 @@
 const express = require("express");
+const sqlite3 = require("sqlite3").verbose();
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const app = express();
-
 app.use(express.json());
 
-// Temporary database
-let students = [
-  {
-    id: 1,
-    name: "Dilan Mathias",
-    email: "dilan@example.com",
-    course: "Backend Development",
-    age: 21
+const PORT = 5000;
+const JWT_SECRET = "day03_secret_key";
+
+// Database connection
+const db = new sqlite3.Database("./users.db", (err) => {
+  if (err) {
+    console.error("Database connection failed");
+  } else {
+    console.log("SQLite database connected");
   }
-];
+});
+
+// Create users table
+db.run(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+  )
+`);
 
 // Home route
 app.get("/", (req, res) => {
-  res.send("Day 02 Backend CRUD API is running");
+  res.send("Day 03 Backend Authentication API is running");
 });
 
-// CREATE student
-app.post("/api/students", (req, res) => {
-  const { name, email, course, age } = req.body;
+// Register API
+app.post("/api/auth/register", async (req, res) => {
+  const { name, email, password } = req.body;
 
-  if (!name || !email || !course || !age) {
+  if (!name || !email || !password) {
     return res.status(400).json({
-      message: "All fields are required"
+      message: "Name, email and password are required"
     });
   }
 
-  const newStudent = {
-    id: students.length + 1,
-    name,
-    email,
-    course,
-    age
-  };
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  students.push(newStudent);
+  const query = `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`;
 
-  res.status(201).json({
-    message: "Student created successfully",
-    student: newStudent
+  db.run(query, [name, email, hashedPassword], function (err) {
+    if (err) {
+      return res.status(400).json({
+        message: "Email already exists or invalid data"
+      });
+    }
+
+    res.status(201).json({
+      message: "User registered successfully",
+      userId: this.lastID
+    });
   });
 });
 
-// READ all students
-app.get("/api/students", (req, res) => {
-  res.status(200).json(students);
-});
+// Login API
+app.post("/api/auth/login", (req, res) => {
+  const { email, password } = req.body;
 
-// READ single student
-app.get("/api/students/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const student = students.find((s) => s.id === id);
-
-  if (!student) {
-    return res.status(404).json({
-      message: "Student not found"
+  if (!email || !password) {
+    return res.status(400).json({
+      message: "Email and password are required"
     });
   }
 
-  res.status(200).json(student);
-});
+  const query = `SELECT * FROM users WHERE email = ?`;
 
-// UPDATE student
-app.put("/api/students/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const student = students.find((s) => s.id === id);
+  db.get(query, [email], async (err, user) => {
+    if (err) {
+      return res.status(500).json({
+        message: "Server error"
+      });
+    }
 
-  if (!student) {
-    return res.status(404).json({
-      message: "Student not found"
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        message: "Invalid password"
+      });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({
+      message: "Login successful",
+      token: token
     });
-  }
-
-  const { name, email, course, age } = req.body;
-
-  student.name = name || student.name;
-  student.email = email || student.email;
-  student.course = course || student.course;
-  student.age = age || student.age;
-
-  res.status(200).json({
-    message: "Student updated successfully",
-    student
   });
 });
 
-// DELETE student
-app.delete("/api/students/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const student = students.find((s) => s.id === id);
+// Middleware to verify token
+function verifyToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
 
-  if (!student) {
-    return res.status(404).json({
-      message: "Student not found"
+  if (!authHeader) {
+    return res.status(403).json({
+      message: "Token is required"
     });
   }
 
-  students = students.filter((s) => s.id !== id);
+  const token = authHeader.split(" ")[1];
 
-  res.status(200).json({
-    message: "Student deleted successfully"
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({
+        message: "Invalid or expired token"
+      });
+    }
+
+    req.user = decoded;
+    next();
+  });
+}
+
+// Protected profile route
+app.get("/api/auth/profile", verifyToken, (req, res) => {
+  const query = `SELECT id, name, email FROM users WHERE id = ?`;
+
+  db.get(query, [req.user.id], (err, user) => {
+    if (err) {
+      return res.status(500).json({
+        message: "Server error"
+      });
+    }
+
+    res.status(200).json({
+      message: "Protected profile accessed successfully",
+      user: user
+    });
   });
 });
-
-const PORT = 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
