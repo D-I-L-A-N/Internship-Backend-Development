@@ -1,3 +1,4 @@
 node_modules
-users.db
+day04.db
 .env
+uploads

@@ -2,15 +2,19 @@ const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const path = require("path");
 
 const app = express();
+
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 
 const PORT = 5000;
-const JWT_SECRET = "day03_secret_key";
+const JWT_SECRET = "day04_secret_key";
 
 // Database connection
-const db = new sqlite3.Database("./users.db", (err) => {
+const db = new sqlite3.Database("./day04.db", (err) => {
   if (err) {
     console.error("Database connection failed");
   } else {
@@ -18,7 +22,7 @@ const db = new sqlite3.Database("./users.db", (err) => {
   }
 });
 
-// Create users table
+// Users table
 db.run(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,9 +32,34 @@ db.run(`
   )
 `);
 
+// Notes table
+db.run(`
+  CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    filename TEXT,
+    user_id INTEGER,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )
+`);
+
+// File upload setup
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage: storage });
+
 // Home route
 app.get("/", (req, res) => {
-  res.send("Day 03 Backend Authentication API is running");
+  res.send("Day 04 Backend File Upload API is running");
 });
 
 // Register API
@@ -107,7 +136,7 @@ app.post("/api/auth/login", (req, res) => {
   });
 });
 
-// Middleware to verify token
+// Middleware for token checking
 function verifyToken(req, res, next) {
   const authHeader = req.headers["authorization"];
 
@@ -131,20 +160,56 @@ function verifyToken(req, res, next) {
   });
 }
 
-// Protected profile route
-app.get("/api/auth/profile", verifyToken, (req, res) => {
-  const query = `SELECT id, name, email FROM users WHERE id = ?`;
+// Create note with file upload
+app.post("/api/notes", verifyToken, upload.single("file"), (req, res) => {
+  const { title, description } = req.body;
 
-  db.get(query, [req.user.id], (err, user) => {
+  if (!title || !description) {
+    return res.status(400).json({
+      message: "Title and description are required"
+    });
+  }
+
+  const filename = req.file ? req.file.filename : null;
+
+  const query = `
+    INSERT INTO notes (title, description, filename, user_id)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  db.run(query, [title, description, filename, req.user.id], function (err) {
     if (err) {
       return res.status(500).json({
-        message: "Server error"
+        message: "Failed to create note"
+      });
+    }
+
+    res.status(201).json({
+      message: "Note created successfully",
+      note: {
+        id: this.lastID,
+        title,
+        description,
+        file: filename ? `/uploads/${filename}` : null
+      }
+    });
+  });
+});
+
+// Get logged-in user notes
+app.get("/api/notes", verifyToken, (req, res) => {
+  const query = `SELECT * FROM notes WHERE user_id = ?`;
+
+  db.all(query, [req.user.id], (err, notes) => {
+    if (err) {
+      return res.status(500).json({
+        message: "Failed to fetch notes"
       });
     }
 
     res.status(200).json({
-      message: "Protected profile accessed successfully",
-      user: user
+      message: "Notes fetched successfully",
+      notes: notes
     });
   });
 });
