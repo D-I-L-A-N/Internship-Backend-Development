@@ -1,6 +1,91 @@
 # Day 01 Backend Development Task
 
-This folder contains the Day 01 Backend Development task files, screenshots, and documentation.<img width="1914" height="1079" alt="Screenshot 2026-03-30 212640" src="https://github.com/user-attachments/assets/c0d06d51-9f56-4322-866b-f032dbf87212" />
-<img width="1383" height="820" alt="post_api_output" src="https://github.com/user-attachments/assets/a6dbfc58-f57a-4ebd-8e79-653de6c7dc55" />
-<img width="558" height="287" alt="get_api_output" src="https://github.com/user-attachments/assets/90396f15-7431-44a0-ac2e-5166603398cb" />
-<img width="540" height="543" alt="final_get_after_post" src="https://github.com/user-attachments/assets/6cadc73a-8ef8-47d2-b194-0c98a8a01390" />
+Project Title:
+Simple Student REST API
+
+Description:
+This project is created for Day 01 Backend Development internship training task.
+
+The project contains two REST APIs:
+1. GET API to retrieve student data
+2. POST API to add new student data
+
+Technology Used:
+- Python
+- Flask
+- Browser
+- PowerShell
+
+How to Run:
+1. Install Flask:
+pip install flask
+
+2. Run the application:
+python app.py
+
+3. Server URL:
+http://127.0.0.1:5000
+
+API 1: GET Students
+
+Method:
+GET
+
+Endpoint:
+/students
+
+Full URL:
+http://127.0.0.1:5000/students
+
+Description:
+This API retrieves all student data.
+
+Sample Response:
+{
+  "data": [
+    {
+      "domain": "Backend Development",
+      "id": 1,
+      "name": "Dilan"
+    },
+    {
+      "domain": "Backend Development",
+      "id": 2,
+      "name": "Aman"
+    }
+  ],
+  "message": "Student data fetched successfully"
+}
+
+API 2: POST Student
+
+Method:
+POST
+
+Endpoint:
+/students
+
+Full URL:
+http://127.0.0.1:5000/students
+
+Description:
+This API adds a new student.
+
+Sample Request:
+{
+  "name": "Rahul",
+  "domain": "Backend Development"
+}
+
+Sample Response:
+{
+  "data": {
+    "domain": "Backend Development",
+    "id": 3,
+    "name": "Rahul"
+  },
+  "message": "Student added successfully"
+}
+
+Conclusion:
+In this task, I learned how to create and test basic REST APIs using Flask. I created a GET API to retrieve data and a POST API to submit new data. I tested the GET API using browser and POST API using PowerShell.
