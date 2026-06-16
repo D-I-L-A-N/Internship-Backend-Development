@@ -1,0 +1,1 @@
+This is a sample file uploaded for Day 04 Backend File Upload API task.
