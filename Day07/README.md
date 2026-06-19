@@ -255,3 +255,6 @@ The main challenges were managing project-task relationships, implementing role-
 ## Conclusion
 
 I successfully developed a secure and complete Project Management Backend API using Node.js, Express.js, SQLite, JWT, bcryptjs, Helmet, express-rate-limit, and Node-Cache. The project demonstrates system design, API development, database management, security, validation, performance optimization, testing, and deployment readiness.
+## Git Workflow
+
+This project is maintained using a feature branch and pull request workflow.
